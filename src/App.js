@@ -1,3 +1,4 @@
+import { fireEvent } from "@testing-library/react";
 import { useState } from "react";
 
 const initialFriends = [
@@ -49,6 +50,18 @@ export default function App() {
     setShowAddFriend(false);
   }
 
+  function handleSplitBill(value) {
+    setFriends((friends) =>
+      friends.map((friend) =>
+        friend.id === selectedFriends.id
+          ? { ...friend, balance: friend.balance + value }
+          : friend
+      )
+    );
+
+    setSelectedFriends(null);
+  }
+
   return (
     <div className="app">
       <div className="sidebar">
@@ -65,7 +78,12 @@ export default function App() {
         </Button>
       </div>
 
-      {selectedFriends && <FormSplitBill selectedFriends={selectedFriends} />}
+      {selectedFriends && (
+        <FormSplitBill
+          selectedFriends={selectedFriends}
+          onSplitBill={handleSplitBill}
+        />
+      )}
     </div>
   );
 }
@@ -158,14 +176,22 @@ function FormAddFriend({ onAddFriend }) {
   );
 }
 
-function FormSplitBill({ selectedFriends }) {
+function FormSplitBill({ selectedFriends, onSplitBill }) {
   const [bill, setBill] = useState("");
   const [paidByUser, setPaidByUser] = useState("");
   const paidByFriend = bill ? bill - paidByUser : "";
   const [whoIsPaying, setWhoIsPaying] = useState("user");
 
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    if (!bill || !paidByUser) return;
+
+    onSplitBill(whoIsPaying === "user" ? paidByFriend : -paidByFriend);
+  }
+
   return (
-    <form className="form-split-bill">
+    <form className="form-split-bill" onSubmit={handleSubmit}>
       <h2>Split a bill with {selectedFriends.name}</h2>
 
       <label>💰 Bill Value</label>
